@@ -1,12 +1,14 @@
+
 #include <stdio.h>
 #include <assert.h>
-
+#include <math.h>
+#include <stdlib.h>
+#include <cstdlib>
 /** \brief find_roots() is needed to find roots from giving parameters
  *
  * \param 'a' 'b' 'c' param. form equation 'ax^2+bx+c=0'
  * \param x1 and x2 solutions of equation if they exist
  * \return returns number of roots
- *
  */
 int find_roots (double a, double b, double c, double *x1, double *x2);
 
@@ -16,10 +18,9 @@ int mod_more_0(double a);
 int solve_linear(double k, double b, double* x1);
 int output_roots (int num_of_roots, double x1, double x2);
 int test_project ();
-int check_input (double* a);
-
+int check_input (double* a, double* b, double* c);
 /**< const for comparing with 0  */
-const double epsilon = 1e-6;/// константа для сранения вводимых чисел с нулем
+const double epsilon = 1e-6;/// ��������� ��� �������� �������� ����� � �����
 
 /**< enum is needed to denote the numbers as number of roots */
 enum roots
@@ -54,15 +55,19 @@ int main()
  */
 int find_roots (double a, double b, double c, double* x1, double* x2)
 {
+    double Discr = discriminant(a, b, c);
     assert (x1 != x2);
+
     if (!mod_more_0(a))
     {
-        return solve_linear (b, c, &x1);
+        return solve_linear (b, c, x1);
     }
-
-    double Discr = discriminant(a, b, c);
-
-    if (!mod_more_0(Discr))
+    else if (!mod_more_0(c))
+    {
+        *x2 = 0;
+        return solve_linear(a, b, x1) + 1;
+    }
+    else if (!mod_more_0(Discr))
     {
         *x1 = -b / (2*a);
         return ONE_ROOT;
@@ -73,18 +78,10 @@ int find_roots (double a, double b, double c, double* x1, double* x2)
     }
     else if (Discr > 0)
     {
-        if (!mod_more_0(c))
-        {
-            *x2 = 0;
-            return solve_linear(a, b, &x1) + 1;
-        }
-        else
-        {
-            double Sq_Di = sqrt(Discr);
-            *x1 = ( -b + Sq_Di ) / (2*a);
-            *x2 = ( -b - Sq_Di ) / (2*a);
-            return TWO_ROOTS;
-        }
+        double Sq_Di = sqrt(Discr);
+        *x1 = ( -b + Sq_Di ) / (2*a);
+        *x2 = ( -b - Sq_Di ) / (2*a);
+        return TWO_ROOTS;
     }
 }
 
@@ -95,13 +92,10 @@ int find_roots (double a, double b, double c, double* x1, double* x2)
  */
 int inputs (double* a, double* b, double* c)
 {
-    printf("Enter coefficient a b c from your equation ax^2+bx+c=0\n"
-           "a:");
-    check_input (a);
-    printf("b:");
-    check_input (b);
-    printf("c:");
-    check_input (c);
+    printf("Enter with spaces coefficient a b c from your equation ax^2+bx+c=0 \n");
+    
+    check_input (a,b,c);
+    
     return 0;
 }
 
@@ -111,25 +105,22 @@ int inputs (double* a, double* b, double* c)
  * \return 0 anyway
  *
  */
-int check_input (double* a)
+int check_input (double* a, double* b, double* c)
 {
-   while (scanf("%lg", a) == 0)
-   {
-       printf("pls enter right number\n");
-       while (getchar() != '\n') {;}
-       printf(":");
-   }
+    while (scanf("%lg %lg %lg", a, b, c) != 3) 
+    {  
+        printf("pls enter right number\n");
+        while (getchar() != '\n') {;}
+        printf(",");
+    }
 
-   while (getchar() != '\n') {;}
-
-   return 0;
+    return 0;
 }
 
 /** \brief counting discriminant while solving equation
  *
  * \param a b c from equation
  * \return meaning of discriminant
- *
  */
 double discriminant (double a, double b, double c)
 {
@@ -213,7 +204,12 @@ int test_project ()
 {
     double x1 = 0, x2 = 0;
     int ERRORS = 0;
-    double solut[] = {INF_ROOTS, ONE_ROOT, ZERO_ROOTS, TWO_ROOTS, TWO_ROOTS};
+    double *solut = (double *) calloc(5, sizeof(*solut));
+    solut[0] = INF_ROOTS;
+    solut[1] = ONE_ROOT;
+    solut[2] = ZERO_ROOTS;
+    solut[3] = TWO_ROOTS;
+    solut[4] = TWO_ROOTS;
     struct koef{
     double a; double b; double c;
     };
@@ -231,6 +227,7 @@ int test_project ()
         }
     }
     free(k);
+    free(solut);
     printf("%d ERRORS\n", ERRORS);
     return 0;
 }
